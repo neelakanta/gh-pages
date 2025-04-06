@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Function Plotter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.9.1/math.min.js"></script>
+    <style>
+      body {
+          font-family: 'Inter', sans-serif;
+      }
+      /* Ensure plot div takes up space */
+      #plotDiv {
+          min-height: 500px; /* Make plot area taller for 3D */
+          position: relative; /* Needed for absolute positioning of loader */
+      }
+      /* Simple spinner using Tailwind classes */
+      .spinner {
+          border-color: #4f46e5; /* indigo-600 */
+          border-top-color: transparent;
+          width: 3rem; /* w-12 */
+          height: 3rem; /* h-12 */
+          border-width: 4px;
+          border-style: solid;
+          border-radius: 50%; /* rounded-full */
+          animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+          to { transform: rotate(360deg); }
+      }
+      /* Center the loader within the plotDiv */
+      #loadingIndicator {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 10; /* Ensure it's above the plot initially */
+      }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8 flex flex-col items-center min-h-screen">
+
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-2xl">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Plot 3D Function: z = f(x, y)</h1>
+
+        <div class="mb-4">
+            <label for="func3d" class="block text-sm font-medium text-gray-700 mb-1">z = f(x, y) =</label>
+            <input type="text" id="func3d" value="sin(sqrt(x^2 + y^2)) / sqrt(x^2 + y^2)" placeholder="e.g., x^2 + y^2, sin(x)*cos(y)"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div>
+                <label for="xMin" class="block text-sm font-medium text-gray-700 mb-1">X Min:</label>
+                <input type="number" id="xMin" value="-5" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="xMax" class="block text-sm font-medium text-gray-700 mb-1">X Max:</label>
+                <input type="number" id="xMax" value="5" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="yMin" class="block text-sm font-medium text-gray-700 mb-1">Y Min:</label>
+                <input type="number" id="yMin" value="-5" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="yMax" class="block text-sm font-medium text-gray-700 mb-1">Y Max:</label>
+                <input type="number" id="yMax" value="5" step="any" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+        </div>
+
+        <button id="updateButton"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+            Update Graph
+        </button>
+
+        <div id="errorDiv" class="mt-4 text-red-600 text-sm font-semibold min-h-[1.25rem]"></div>
+
+        <div id="plotDivContainer" class="mt-6 w-full bg-gray-50 rounded-md border border-gray-200 relative">
+             <div id="loadingIndicator" class="hidden flex-col items-center justify-center p-4">
+                 <div class="spinner mb-2"></div>
+                 <span class="text-gray-500 text-sm">Calculating & Rendering...</span>
+             </div>
+             <div id="plotDiv"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get references to HTML elements
+        const func3dInput = document.getElementById('func3d');
+        const xMinInput = document.getElementById('xMin');
+        const xMaxInput = document.getElementById('xMax');
+        const yMinInput = document.getElementById('yMin');
+        const yMaxInput = document.getElementById('yMax');
+        const updateButton = document.getElementById('updateButton');
+        const plotDiv = document.getElementById('plotDiv'); // Actual Plotly target
+        const errorDiv = document.getElementById('errorDiv');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // Helper function to show/hide loader
+        function showLoader(show) {
+            if (show) {
+                loadingIndicator.classList.remove('hidden');
+                loadingIndicator.classList.add('flex');
+                // No longer clearing plotDiv here, Plotly.purge will handle it
+            } else {
+                loadingIndicator.classList.add('hidden');
+                loadingIndicator.classList.remove('flex');
+            }
+        }
+
+        // --- Core Plotting Function ---
+        function plot3DFunction() {
+            // **NEW**: Explicitly purge the previous plot first
+            try {
+                Plotly.purge(plotDiv);
+            } catch (purgeError) {
+                console.error("Error purging Plotly instance:", purgeError);
+                // Continue execution even if purge fails, maybe Plotly wasn't initialized yet
+            }
+
+            errorDiv.textContent = ''; // Clear previous errors
+            showLoader(true); // Show loader
+
+            // Use a minimal timeout to allow the loader to render before heavy work
+            setTimeout(() => {
+                // Get function string and range values
+                const funcStr = func3dInput.value.trim();
+                const xMin = parseFloat(xMinInput.value);
+                const xMax = parseFloat(xMaxInput.value);
+                const yMin = parseFloat(yMinInput.value);
+                const yMax = parseFloat(yMaxInput.value);
+
+                // --- Input Validation ---
+                // (Validation logic remains the same)
+                if (!funcStr) {
+                    errorDiv.textContent = 'Please enter an expression for z = f(x, y).';
+                    showLoader(false);
+                    // Plotly.purge(plotDiv); // Already purged above
+                    return;
+                }
+                if (isNaN(xMin) || isNaN(xMax) || isNaN(yMin) || isNaN(yMax)) {
+                    errorDiv.textContent = 'Please enter valid numbers for all range inputs.';
+                    showLoader(false);
+                    // Plotly.purge(plotDiv);
+                    return;
+                }
+                if (xMin >= xMax || yMin >= yMax) {
+                    errorDiv.textContent = 'Min values must be less than Max values for ranges.';
+                    showLoader(false);
+                    // Plotly.purge(plotDiv);
+                    return;
+                }
+
+                let compiledFunc;
+
+                // --- Safely parse the input string using Math.js ---
+                try {
+                    compiledFunc = math.compile(funcStr);
+                } catch (err) {
+                    errorDiv.textContent = `Error parsing function: ${err.message}`;
+                    showLoader(false);
+                    // Plotly.purge(plotDiv);
+                    return;
+                }
+
+                // --- Generate Grid Data ---
+                // (Grid generation logic remains the same)
+                const step = Math.max((xMax - xMin) / 40, (yMax - yMin) / 40, 0.1);
+                const xValues = [];
+                for (let x = xMin; x <= xMax; x += step) {
+                    xValues.push(Math.round(x * 1000) / 1000);
+                }
+                if (xValues[xValues.length - 1] < xMax) xValues.push(xMax);
+
+                const yValues = [];
+                for (let y = yMin; y <= yMax; y += step) {
+                    yValues.push(Math.round(y * 1000) / 1000);
+                }
+                if (yValues[yValues.length - 1] < yMax) yValues.push(yMax);
+
+
+                // --- Calculate z values ---
+                // (Calculation logic remains the same)
+                const zValues = [];
+                let calculationError = false;
+                try {
+                    yValues.forEach(y => {
+                        const row = [];
+                        xValues.forEach(x => {
+                            const scope = { x: x, y: y };
+                            try {
+                                const z = compiledFunc.evaluate(scope);
+                                if (typeof z === 'object' && z.isComplex || !isFinite(z)) {
+                                    row.push(null);
+                                } else {
+                                    row.push(z);
+                                }
+                            } catch (evalErr) {
+                                if (!calculationError) {
+                                     console.warn(`Error evaluating f(${x}, ${y}) [${funcStr}]: ${evalErr.message}`);
+                                }
+                                calculationError = true;
+                                row.push(null);
+                            }
+                        });
+                        zValues.push(row);
+                    });
+                } catch (calcError) {
+                     errorDiv.textContent = `Error during calculation: ${calcError.message}`;
+                     console.error("Calculation error:", calcError);
+                     showLoader(false);
+                     // Plotly.purge(plotDiv); // Already purged
+                     return;
+                }
+
+                if (calculationError) {
+                    errorDiv.textContent += (errorDiv.textContent ? ' ' : '') + 'Note: Some points could not be calculated (check console).';
+                }
+
+                // --- Define Plotly Data and Layout ---
+                // (Data, Layout, Config definitions remain the same)
+                 const data = [{
+                    x: xValues,
+                    y: yValues,
+                    z: zValues,
+                    type: 'surface',
+                    colorscale: 'Viridis',
+                    contours: {
+                        z: { show:true, usecolormap: true, highlightcolor:"#444", project:{z: true} }
+                    }
+                }];
+
+                const layout = {
+                    title: { text: `z = ${funcStr}`, font: { size: 16, family: 'Inter, sans-serif' } },
+                    scene: {
+                        xaxis: { title: 'X Axis', backgroundcolor: "rgb(235, 235, 235)", gridcolor: "rgb(255, 255, 255)", zerolinecolor: "rgb(255, 255, 255)" },
+                        yaxis: { title: 'Y Axis', backgroundcolor: "rgb(235, 235, 235)", gridcolor: "rgb(255, 255, 255)", zerolinecolor: "rgb(255, 255, 255)" },
+                        zaxis: { title: 'Z Axis', backgroundcolor: "rgb(235, 235, 235)", gridcolor: "rgb(255, 255, 255)", zerolinecolor: "rgb(255, 255, 255)" },
+                        camera: { eye: {x: 1.8, y: 1.8, z: 0.8} }
+                    },
+                    margin: { l: 20, r: 20, b: 20, t: 40 },
+                    paper_bgcolor: '#f9fafb',
+                    plot_bgcolor: '#f9fafb',
+                    font: { family: 'Inter, sans-serif' }
+                };
+
+                const config = { responsive: true, displaylogo: false };
+
+
+                // --- Draw the plot ---
+                try {
+                    Plotly.react(plotDiv, data, layout, config);
+                } catch (plotError) {
+                    console.error("Plotly rendering error:", plotError);
+                    errorDiv.textContent = `Error rendering plot: ${plotError.message}`;
+                    // Plotly.purge(plotDiv); // Already purged
+                } finally {
+                    // IMPORTANT: Ensure loader is hidden even if Plotly.react errors out
+                    showLoader(false);
+                }
+
+            }, 10); // 10ms delay
+        }
+
+        // --- Event Listeners ---
+        // (Listeners remain the same)
+        updateButton.addEventListener('click', plot3DFunction);
+        [func3dInput, xMinInput, xMaxInput, yMinInput, yMaxInput].forEach(input => {
+            input.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    plot3DFunction();
+                }
+            });
+        });
+
+        // --- Initial Plot ---
+        window.onload = plot3DFunction;
+
+    </script>
+
+</body>
+</html>
