@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>French Revolution Timeline</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #fafafa;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    #timeline-container {
+      position: relative;
+      width: 1000px;
+      height: 150px;
+      margin: 0 auto;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    /* Horizontal line representing the timeline */
+    #timeline-line {
+      position: absolute;
+      top: 50%;
+      left: 40px;
+      right: 40px;
+      height: 2px;
+      background-color: #ccc;
+    }
+    /* Marker style */
+    .event-marker {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background-color: #ff5722;
+      border: 2px solid #333;
+      border-radius: 50%;
+      cursor: pointer;
+      transform: translateX(-50%) translateY(-50%);
+      transition: transform 0.2s;
+    }
+    .event-marker:hover {
+      transform: translateX(-50%) translateY(-50%) scale(1.2);
+    }
+    /* Label style */
+    .event-label {
+      position: absolute;
+      top: calc(50% + 12px);
+      font-size: 12px;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+    /* Tooltip style */
+    .tooltip {
+      position: absolute;
+      padding: 8px;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 12px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 10;
+      max-width: 250px;
+    }
+    .tooltip.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>French Revolution Timeline</h1>
+  <div id="timeline-container">
+    <div id="timeline-line"></div>
+    <div id="tooltip" class="tooltip"></div>
+  </div>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Define 20 timeline events (data points) from 1789 to 1799
+      const events = [
+        {
+          date: new Date("1789-05-05"),
+          title: "Estates-General Convenes",
+          description: "The Estates-General is convened, marking the beginning of the French Revolution."
+        },
+        {
+          date: new Date("1789-06-17"),
+          title: "National Assembly Declared",
+          description: "The Third Estate declares itself the National Assembly."
+        },
+        {
+          date: new Date("1789-06-20"),
+          title: "Tennis Court Oath",
+          description: "Members of the National Assembly take the Tennis Court Oath, vowing not to separate until a new constitution is established."
+        },
+        {
+          date: new Date("1789-07-09"),
+          title: "Royal Recognition",
+          description: "The National Assembly gains recognition from King Louis XVI."
+        },
+        {
+          date: new Date("1789-07-14"),
+          title: "Storming of the Bastille",
+          description: "Revolutionaries storm the Bastille prison, a powerful symbol of royal tyranny."
+        },
+        {
+          date: new Date("1789-08-04"),
+          title: "Abolition of Feudalism",
+          description: "Feudal privileges are abolished by the National Assembly."
+        },
+        {
+          date: new Date("1789-08-26"),
+          title: "Declaration of the Rights of Man",
+          description: "A declaration of individual and collective rights is proclaimed, laying the ideological foundation for the Revolution."
+        },
+        {
+          date: new Date("1789-10-05"),
+          title: "Women's March on Versailles",
+          description: "Women march on Versailles demanding bread and political reforms."
+        },
+        {
+          date: new Date("1789-10-16"),
+          title: "Royal Family Moves to Paris",
+          description: "Facing mounting pressure, the royal family is forced to move from Versailles to Paris."
+        },
+        {
+          date: new Date("1790-07-12"),
+          title: "Civil Constitution of the Clergy",
+          description: "The Civil Constitution of the Clergy reorganizes the Church in France, reducing its power."
+        },
+        {
+          date: new Date("1791-06-20"),
+          title: "Flight to Varennes",
+          description: "King Louis XVI and his family attempt to flee France but are apprehended at Varennes."
+        },
+        {
+          date: new Date("1791-09-03"),
+          title: "Constitution of 1791 Adopted",
+          description: "The French Constitution of 1791 is adopted, establishing a constitutional monarchy."
+        },
+        {
+          date: new Date("1792-04-20"),
+          title: "War Declaration",
+          description: "France declares war on Austria, marking the start of the Revolutionary Wars."
+        },
+        {
+          date: new Date("1792-08-10"),
+          title: "Storming of the Tuileries",
+          description: "Revolutionaries storm the Tuileries Palace, leading to the suspension of the monarchy."
+        },
+        {
+          date: new Date("1792-09-21"),
+          title: "Republic Declared",
+          description: "The monarchy is abolished and France is declared a Republic."
+        },
+        {
+          date: new Date("1793-01-21"),
+          title: "Execution of Louis XVI",
+          description: "King Louis XVI is executed by guillotine, a pivotal moment in the Revolution."
+        },
+        {
+          date: new Date("1793-09-05"),
+          title: "Reign of Terror Begins",
+          description: "A period of extreme political repression and mass executions begins."
+        },
+        {
+          date: new Date("1794-07-27"),
+          title: "Fall of Robespierre",
+          description: "Maximilien Robespierre is arrested and executed, effectively ending the Reign of Terror."
+        },
+        {
+          date: new Date("1795-11-05"),
+          title: "Establishment of the Directory",
+          description: "A new government, known as the Directory, is established to lead France."
+        },
+        {
+          date: new Date("1799-11-09"),
+          title: "Napoleon's Coup",
+          description: "Napoleon Bonaparte seizes power in the Coup of 18 Brumaire, marking the end of the Revolution."
+        }
+      ];
+      
+      // Ensure events are in chronological order (they already are)
+      // Timeline dimensions and positioning
+      const timelineContainer = document.getElementById("timeline-container");
+      const containerWidth = timelineContainer.clientWidth;
+      const timelineStart = 40; // left offset
+      const timelineEnd = containerWidth - 40;
+      const timelineWidth = timelineEnd - timelineStart;
+      
+      const tooltip = document.getElementById("tooltip");
+      
+      // Create markers and labels for each event (using equal spacing)
+      events.forEach((eventData, index) => {
+        // Calculate left position equally distributed along the timeline
+        const leftPos = timelineStart + (index / (events.length - 1)) * timelineWidth;
+        
+        // Create event marker
+        const marker = document.createElement("div");
+        marker.className = "event-marker";
+        marker.style.left = leftPos + "px";
+        marker.style.top = "50%";
+        
+        // Show tooltip on hover
+        marker.addEventListener("mouseenter", function() {
+          const content = `<strong>${eventData.title}</strong><br>
+                           ${eventData.date.toLocaleDateString()}<br>
+                           ${eventData.description}`;
+          tooltip.innerHTML = content;
+          tooltip.classList.add("visible");
+          
+          // Position tooltip relative to the marker
+          const markerRect = marker.getBoundingClientRect();
+          const containerRect = timelineContainer.getBoundingClientRect();
+          const tooltipWidth = tooltip.offsetWidth;
+          const tooltipHeight = tooltip.offsetHeight;
+          
+          let top = markerRect.top - containerRect.top - tooltipHeight - 10;
+          if (top < 0) {
+            top = markerRect.bottom - containerRect.top + 10;
+          }
+          let left = markerRect.left - containerRect.left - (tooltipWidth / 2) + (markerRect.width / 2);
+          left = Math.max(0, Math.min(left, containerWidth - tooltipWidth));
+          
+          tooltip.style.top = top + "px";
+          tooltip.style.left = left + "px";
+        });
+        
+        marker.addEventListener("mouseleave", function() {
+          tooltip.classList.remove("visible");
+        });
+        
+        timelineContainer.appendChild(marker);
+        
+        // Create a label displaying the year
+        const label = document.createElement("div");
+        label.className = "event-label";
+        label.style.left = leftPos + "px";
+        label.innerText = eventData.date.getFullYear();
+        timelineContainer.appendChild(label);
+      });
+    });
+  </script>
+</body>
+</html>

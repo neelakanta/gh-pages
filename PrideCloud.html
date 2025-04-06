@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pride and Prejudice Word Cloud</title>
+    <style>
+        /* Basic styling for the page */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f9f9f9; /* Light background */
+        }
+        h1 {
+            color: #333;
+        }
+        /* Styling for the control elements */
+        #controls {
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between elements */
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #controls label {
+            font-weight: 500; /* Medium weight */
+            color: #555;
+        }
+        #controls input[type="number"] {
+            width: 70px; /* Slightly wider input */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            text-align: center;
+        }
+        #controls button {
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: #007bff; /* Blue button */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: background-color 0.2s ease; /* Smooth hover effect */
+        }
+        #controls button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+        /* Styling for the word cloud container */
+        #wordcloud-container {
+            width: 90%; /* Responsive width */
+            max-width: 700px; /* Max width */
+            height: 450px; /* Fixed height */
+            border: 1px solid #ddd;
+            background-color: #ffffff; /* White background for the cloud */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Slightly stronger shadow */
+            border-radius: 8px; /* Rounded corners */
+            margin: 0 auto; /* Center the container */
+            position: relative; /* Needed for potential absolute positioning inside */
+            overflow: hidden; /* Hide overflow if words go outside */
+        }
+        /* Styling for error messages */
+        #error-message {
+            color: #d9534f; /* Red color for errors */
+            margin-top: 15px;
+            font-weight: bold;
+            height: 1em; /* Reserve space even when empty */
+        }
+    </style>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"
+        integrity="sha512-/p6N7s5RhQ8OOh58JFL6Xkqvz+V/fpyJPXd0eJzXYxUz/1Fj9HB/HpIZlShhLIRb8Fwdp/hL+3GY+Y0tXk7Ecw=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+        defer> {/* Added defer attribute */}
+    </script>
+</head>
+<body>
+
+    <h1>Pride and Prejudice - Word Frequency Cloud</h1>
+
+    <div id="controls">
+        <label for="word-count">Show Top:</label>
+        <input type="number" id="word-count" name="word-count" value="10" min="1" max="200">
+        <label for="word-count">Words</label>
+        <button id="update-button">Update Cloud</button>
+    </div>
+
+    <div id="error-message"></div>
+
+    <div id="wordcloud-container"></div>
+
+    <script>
+        // --- Pre-calculated Word Frequencies from Pride and Prejudice ---
+        const wordFrequencies = [
+            ["mr", 786], ["elizabeth", 635], ["mrs", 621], ["darcy", 418], ["said", 402],
+            ["jane", 395], ["bingley", 381], ["bennet", 360], ["know", 239], ["lady", 225],
+            ["never", 220], ["miss", 217], ["collins", 203], ["think", 195], ["will", 193],
+            ["much", 188], ["must", 182], ["time", 175], ["sister", 174], ["well", 167],
+            ["could", 167], ["good", 165], ["wickham", 165], ["such", 160], ["father", 157],
+            ["dear", 152], ["shall", 149], ["catherine", 149], ["make", 142], ["lydia", 139],
+            ["little", 136], ["though", 132], ["now", 128], ["soon", 127], ["man", 123],
+            ["first", 120], ["friend", 119], ["say", 118], ["letter", 118], ["nothing", 117],
+            ["young", 115], ["come", 112], ["mother", 111], ["give", 111], ["did", 110],
+            ["before", 109], ["day", 108], ["however", 108], ["very", 107], ["room", 106],
+            ["long", 105], ["replied", 104], ["made", 101], ["felt", 100], ["feelings", 97],
+            ["indeed", 97], ["without", 96], ["happy", 96], ["see", 95], ["away", 93],
+            ["may", 93], ["every", 91], ["family", 88], ["place", 88], ["house", 88],
+            ["believe", 87], ["heard", 87], ["hertfordshire", 86], ["might", 86], ["way", 85],
+            ["sure", 84], ["last", 84], ["would", 83], ["colonel", 83], ["gardiner", 83],
+            ["tell", 82], ["certainly", 82], ["often", 81], ["sir", 81], ["mind", 81],
+            ["manner", 79], ["character", 79], ["aunt", 79], ["pleasure", 78], ["world", 78],
+            ["one", 77], ["perhaps", 77], ["left", 77], ["hope", 76], ["present", 76],
+            ["others", 75], ["subject", 75], ["great", 74], ["quite", 74], ["general", 74],
+            ["received", 73], ["power", 72], ["home", 71], ["person", 71], ["moment", 70],
+            ["enough", 70], ["returned", 70], ["less", 69], ["acquaintance", 69], ["many", 68],
+            ["part", 68], ["found", 68], ["another", 67], ["opinion", 67], ["visit", 67],
+            ["lady catherine", 66], ["done", 66], ["account", 66], ["whose", 65], ["affection", 65],
+            ["thought", 65], ["passed", 64], ["looked", 64], ["state", 64], ["asked", 64],
+            ["kind", 64], ["attention", 63], ["always", 63], ["till", 63], ["doubt", 63],
+            ["appeared", 62], ["whole", 62], ["heard", 62], ["used", 62], ["wish", 61],
+            ["entailed", 61], ["morning", 61], ["conduct", 60], ["matters", 60], ["seen", 60],
+            ["able", 60], ["anxiety", 59], ["course", 59], ["leave", 59], ["business", 59],
+            ["longbourn", 58], ["cannot", 58], ["sister's", 58], ["marriage", 58], ["having", 57],
+            ["replied elizabeth", 57], ["next", 57], ["almost", 57], ["expression", 56], ["far", 56],
+            ["gave", 56], ["suppose", 56], ["behaviour", 55], ["sometimes", 55], ["forster", 55],
+            ["evening", 55], ["between", 54], ["deal", 54], ["answered", 54], ["continued", 54],
+            ["object", 53], ["return", 53], ["towards", 53], ["uncle", 53], ["party", 53],
+            ["possible", 52], ["beauty", 52], ["talked", 52], ["own", 52], ["truth", 51],
+            ["reason", 51], ["together", 51], ["town", 51], ["spirits", 51], ["within", 50],
+            ["pride", 50], ["coming", 50], ["since", 50], ["interest", 50], ["circumstances", 50]
+        ];
+
+        // --- DOM Element References ---
+        // It's generally safer to get references after the DOM is loaded
+        let wordCountInput, updateButton, cloudContainer, errorMessage;
+
+        // --- Function to Generate and Display the Word Cloud ---
+        function generateWordCloud(numberOfWords) {
+            // Ensure elements are available before proceeding
+            if (!cloudContainer || !errorMessage) {
+                console.error("[Error] DOM elements not found. Cannot generate cloud.");
+                return;
+            }
+
+            errorMessage.textContent = ''; // Clear any previous error messages
+            console.log(`[Log] Attempting to generate cloud for ${numberOfWords} words.`); // Log entry
+
+            // --- Input Validation ---
+            if (isNaN(numberOfWords) || numberOfWords <= 0) {
+                 errorMessage.textContent = 'Please enter a valid number greater than 0.';
+                 cloudContainer.innerHTML = ''; // Remove any previous canvas
+                 console.log("[Log] Validation failed: Input is not a positive number."); // Log validation fail
+                 return; // Stop execution if input is invalid
+            }
+
+            // --- Check if Library is Loaded ---
+            // This check is crucial. If 'defer' works correctly, WordCloud should be defined.
+            if (typeof WordCloud !== 'function') {
+                console.error("[Error] WordCloud function not found. Library might not be loaded correctly or failed to initialize.");
+                errorMessage.textContent = "WordCloud library failed to load. Check network connection or script URL.";
+                cloudContainer.innerHTML = '';
+                return; // Stop if library isn't loaded
+            }
+
+             // Check if the requested number exceeds the available data
+             if (numberOfWords > wordFrequencies.length) {
+                console.warn(`[Warning] Requested ${numberOfWords} words, but only ${wordFrequencies.length} are available. Displaying all available words.`);
+                numberOfWords = wordFrequencies.length; // Adjust to max available
+             }
+
+
+            // --- Data Preparation ---
+            const topWords = wordFrequencies.slice(0, numberOfWords);
+            console.log("[Log] Top words data prepared (sample):", topWords.slice(0, Math.min(5, topWords.length))); // Log sample of data
+
+            if (topWords.length === 0) {
+                 errorMessage.textContent = 'No word data available to display.';
+                 cloudContainer.innerHTML = ''; // Ensure container is empty
+                 console.log("[Log] Validation failed: No words to display after slicing."); // Log no data
+                 return;
+            }
+
+            // --- WordCloud2.js Configuration Options ---
+            const options = {
+                list: topWords,
+                gridSize: Math.max(8, Math.round(16 * cloudContainer.offsetWidth / 1024)),
+                weightFactor: function (size) {
+                    const baseSize = Math.max(1, size);
+                    const containerWidth = Math.max(1, cloudContainer.offsetWidth);
+                    return Math.pow(baseSize, 0.65) * (containerWidth / 500);
+                },
+                fontFamily: 'Arial, sans-serif',
+                color: 'random-dark',
+                backgroundColor: '#ffffff',
+                rotateRatio: 0.3,
+                rotationSteps: 2,
+                minSize: 6,
+                drawOutOfBound: false,
+                shuffle: true,
+                shape: 'circle',
+                hover: (item, dimension, event) => {
+                    if (item && event && event.target) {
+                        const el = event.target;
+                        if (el instanceof HTMLElement || el instanceof SVGElement) {
+                             el.style.textShadow = '2px 2px 4px rgba(0,0,0,0.3)';
+                             el.style.cursor = 'pointer';
+                        }
+                    }
+                },
+                 clearEvents: () => { /* Internal handling usually sufficient */ }
+            };
+            console.log("[Log] WordCloud options prepared:", options); // Log options before calling
+
+            // --- Generate the Cloud ---
+             try {
+                if (!cloudContainer) {
+                    throw new Error("Word cloud container element (#wordcloud-container) not found in the DOM.");
+                }
+                console.log("[Log] Calling WordCloud()...");
+                cloudContainer.innerHTML = ''; // Clear previous canvas/content
+                WordCloud(cloudContainer, options); // Execute the WordCloud function
+                console.log("[Log] WordCloud() call completed successfully.");
+
+             } catch (error) {
+                 // --- Enhanced Error Logging ---
+                 console.error("----------------------------------------");
+                 console.error("[ERROR] ERROR caught during WordCloud generation:");
+                 console.error("[ERROR] Raw Error Object:", error);
+                 console.error("[ERROR] Error Type:", typeof error);
+                 if (error && error.message) {
+                     console.error("[ERROR] Error Message:", error.message);
+                 } else {
+                     console.warn("[Warning] Error object does not contain a 'message' property.");
+                 }
+                 if (error && error.stack) {
+                     console.error("[ERROR] Error Stack:", error.stack);
+                 } else {
+                      console.warn("[Warning] Error object does not contain a 'stack' property.");
+                 }
+                 try {
+                     console.error("[ERROR] Error JSON (attempt):", JSON.stringify(error));
+                 } catch (stringifyError) {
+                     console.error("[ERROR] Could not JSON.stringify the error object:", stringifyError);
+                 }
+                 console.error("----------------------------------------");
+                 errorMessage.textContent = "Could not generate the word cloud. Check browser console (F12) for technical details.";
+                 cloudContainer.innerHTML = ''; // Ensure container is cleared on error
+             }
+        }
+
+        // --- Initialization and Event Listeners ---
+        // Wait for the DOM to be fully loaded before getting elements and attaching listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[Log] DOM fully loaded and parsed.");
+
+            // Get DOM element references now that the DOM is ready
+            wordCountInput = document.getElementById('word-count');
+            updateButton = document.getElementById('update-button');
+            cloudContainer = document.getElementById('wordcloud-container');
+            errorMessage = document.getElementById('error-message');
+
+            // Check if elements were found
+            if (!wordCountInput || !updateButton || !cloudContainer || !errorMessage) {
+                console.error("[Error] Failed to find one or more essential DOM elements on DOMContentLoaded.");
+                if (errorMessage) errorMessage.textContent = "Initialization failed: UI elements missing.";
+                return; // Stop initialization if elements are missing
+            }
+
+            // Attach Event Listeners
+            updateButton.addEventListener('click', () => {
+                const count = parseInt(wordCountInput.value, 10);
+                generateWordCloud(count);
+            });
+
+            wordCountInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                     event.preventDefault();
+                     const count = parseInt(wordCountInput.value, 10);
+                     generateWordCloud(count);
+                }
+            });
+
+            // --- Initial Cloud Generation ---
+            // Now that DOM is ready and library script is deferred (should execute before this),
+            // generate the initial cloud.
+            console.log("[Log] Generating initial cloud.");
+            const initialCount = parseInt(wordCountInput.value, 10);
+            generateWordCloud(initialCount);
+        });
+
+    </script>
+
+</body>
+</html>
