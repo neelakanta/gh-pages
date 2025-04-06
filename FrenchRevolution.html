@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>French Revolution Flash Cards</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 600px;
+      min-height: 200px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 1.2em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      margin: 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+    #flipButton {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+    #nextButton {
+      background-color: #2196F3;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="flashcard" class="card">
+    <!-- Flashcard content will be shown here -->
+  </div>
+  <div>
+    <button id="flipButton">Show Answer</button>
+    <button id="nextButton" style="display: none;">Next Question</button>
+  </div>
+  <script>
+    // 50 flashcard questions and answers on the French Revolution.
+    const flashcards = [
+      {question: "What were the primary causes of the French Revolution?", answer: "Social inequality, financial crisis, Enlightenment ideas, and poor leadership."},
+      {question: "In what year did the French Revolution begin?", answer: "1789."},
+      {question: "What event is considered the start of the French Revolution?", answer: "The Storming of the Bastille."},
+      {question: "What was the Bastille?", answer: "A medieval fortress and prison in Paris symbolizing royal tyranny."},
+      {question: "What is the Declaration of the Rights of Man and of the Citizen?", answer: "A document outlining the individual and collective rights of the people, adopted in 1789."},
+      {question: "Who was King of France at the start of the French Revolution?", answer: "King Louis XVI."},
+      {question: "Who was Queen of France during the French Revolution?", answer: "Queen Marie Antoinette."},
+      {question: "What is 'Liberté, égalité, fraternité'?", answer: "The national motto of the French Republic, meaning 'Liberty, Equality, Fraternity.'"},
+      {question: "What was the Estates-General?", answer: "A general assembly representing the three estates (clergy, nobility, commoners) in pre-revolutionary France."},
+      {question: "What was the significance of the Tennis Court Oath?", answer: "A pledge by members of the Third Estate to not separate until a new constitution was established."},
+      {question: "Who were the Jacobins?", answer: "A radical political group during the French Revolution."},
+      {question: "What was the Committee of Public Safety?", answer: "A powerful government body that oversaw the Reign of Terror."},
+      {question: "What was the Reign of Terror?", answer: "A period of extreme violence and mass executions during the French Revolution (1793-1794)."},
+      {question: "What role did Maximilien Robespierre play in the French Revolution?", answer: "He was a leading figure during the Reign of Terror."},
+      {question: "What was the guillotine used for during the French Revolution?", answer: "A device used for executing people, symbolizing revolutionary justice."},
+      {question: "What was the role of the sans-culottes?", answer: "They were the working-class revolutionaries who played a key role in the uprising."},
+      {question: "What was the National Assembly?", answer: "The revolutionary assembly formed by the Third Estate in 1789."},
+      {question: "What reforms did the French Revolution bring regarding the church?", answer: "It led to the secularization of society, the nationalization of church property, and reduced church power."},
+      {question: "What was the impact of Enlightenment ideas on the French Revolution?", answer: "They promoted individual rights, rationality, and challenged traditional authority, fueling revolutionary thought."},
+      {question: "What was the economic situation in France prior to the Revolution?", answer: "France faced severe financial crises, high taxes, and widespread poverty."},
+      {question: "How did the French Revolution influence other countries?", answer: "It inspired democratic movements and revolutions around the world."},
+      {question: "What was the significance of the fall of the Bastille?", answer: "It symbolized the end of absolute monarchy and the rise of the people's power."},
+      {question: "What was the role of women during the French Revolution?", answer: "Women participated in protests and some demanded equal rights, although their political role was limited."},
+      {question: "What was the impact of the French Revolution on the French aristocracy?", answer: "The aristocracy lost many privileges and faced persecution."},
+      {question: "What was the 'Flight to Varennes'?", answer: "The attempted escape of King Louis XVI and his family from Paris in 1791."},
+      {question: "What was the outcome of the Flight to Varennes?", answer: "It led to a loss of trust in the monarchy and increased revolutionary fervor."},
+      {question: "How did the French Revolution affect the Catholic Church?", answer: "It resulted in the confiscation of church lands and reduced church influence in governance."},
+      {question: "What was the significance of the 1791 Constitution?", answer: "It established a constitutional monarchy and laid the groundwork for modern democratic government."},
+      {question: "Who was Camille Desmoulins?", answer: "A journalist and revolutionary who supported the uprising and later fell victim to the Reign of Terror."},
+      {question: "What were the 'Rights of Man' as defined during the Revolution?", answer: "They included liberty, property, security, and resistance to oppression."},
+      {question: "What role did the French Revolution play in shaping modern political ideologies?", answer: "It influenced liberalism, nationalism, and the concept of popular sovereignty."},
+      {question: "How did the French Revolution lead to the rise of Napoleon Bonaparte?", answer: "The chaos and power vacuum created by the Revolution paved the way for his military and political ascent."},
+      {question: "What was the significance of the Girondins?", answer: "A political faction that initially supported the Revolution but later fell out of favor with the radicals."},
+      {question: "What role did propaganda play during the French Revolution?", answer: "It was used to mobilize public opinion and justify the actions of revolutionary leaders."},
+      {question: "How did the French Revolution change the structure of French government?", answer: "It transitioned France from an absolute monarchy to a republic with representative institutions."},
+      {question: "What was the significance of the Law of Suspects?", answer: "It allowed for the arrest of individuals suspected of counter-revolutionary activities during the Reign of Terror."},
+      {question: "What was the role of the Revolutionary Tribunals?", answer: "They were courts set up to try and execute enemies of the Revolution."},
+      {question: "How did the French Revolution impact art and culture?", answer: "It encouraged themes of liberty and equality in art, literature, and music."},
+      {question: "What was the role of the National Convention?", answer: "The revolutionary assembly that governed France from 1792 to 1795."},
+      {question: "What did the term 'enlightened despotism' mean in relation to the French Revolution?", answer: "It referred to rulers who embraced Enlightenment ideas without relinquishing absolute power, contrasting with revolutionary ideals."},
+      {question: "How did the French Revolution influence modern educational reforms?", answer: "It led to the secularization of education and the establishment of public schooling."},
+      {question: "What was the 'Thermidorian Reaction'?", answer: "The period following the Reign of Terror when more moderate forces regained power in France."},
+      {question: "How did the French Revolution affect the French military?", answer: "It led to reforms, mass conscription, and eventually contributed to the rise of Napoleon’s army."},
+      {question: "What impact did the French Revolution have on European monarchies?", answer: "It inspired constitutional reforms and challenged the divine right of kings across Europe."},
+      {question: "What role did revolutionary clubs play during the French Revolution?", answer: "They were venues for political debate and organizing revolutionary activities."},
+      {question: "What were the consequences of the revolutionary wars initiated by France?", answer: "They spread revolutionary ideals and reshaped the political landscape of Europe."},
+      {question: "How did the French Revolution influence modern human rights?", answer: "It laid the foundation for concepts of universal rights and the dignity of the individual."},
+      {question: "What was the significance of the execution of King Louis XVI?", answer: "It marked a definitive break with the monarchy and demonstrated the power of the revolutionary government."},
+      {question: "What were the main phases of the French Revolution?", answer: "The moderate phase, the radical phase (Reign of Terror), and the Thermidorian Reaction."},
+      {question: "How did the French Revolution ultimately conclude?", answer: "It led to the rise of Napoleon Bonaparte, ending the revolutionary period and beginning the Napoleonic era."}
+    ];
+
+    // A list of 50 cities with example temperature values (in °C).
+    const cities = [
+      { city: "New York", temp: 20 },
+      { city: "London", temp: 15 },
+      { city: "Paris", temp: 18 },
+      { city: "Tokyo", temp: 22 },
+      { city: "Sydney", temp: 25 },
+      { city: "Berlin", temp: 17 },
+      { city: "Madrid", temp: 21 },
+      { city: "Rome", temp: 19 },
+      { city: "Moscow", temp: 10 },
+      { city: "Beijing", temp: 16 },
+      { city: "Mumbai", temp: 28 },
+      { city: "Los Angeles", temp: 24 },
+      { city: "Toronto", temp: 14 },
+      { city: "Chicago", temp: 16 },
+      { city: "Singapore", temp: 30 },
+      { city: "Dubai", temp: 35 },
+      { city: "Hong Kong", temp: 20 },
+      { city: "Buenos Aires", temp: 22 },
+      { city: "Sao Paulo", temp: 25 },
+      { city: "Mexico City", temp: 20 },
+      { city: "Johannesburg", temp: 18 },
+      { city: "Cairo", temp: 33 },
+      { city: "Istanbul", temp: 23 },
+      { city: "Amsterdam", temp: 16 },
+      { city: "Vienna", temp: 15 },
+      { city: "Prague", temp: 17 },
+      { city: "Budapest", temp: 18 },
+      { city: "Zurich", temp: 14 },
+      { city: "Brussels", temp: 16 },
+      { city: "Stockholm", temp: 12 },
+      { city: "Oslo", temp: 10 },
+      { city: "Helsinki", temp: 8 },
+      { city: "Copenhagen", temp: 11 },
+      { city: "Lisbon", temp: 20 },
+      { city: "Athens", temp: 28 },
+      { city: "Seoul", temp: 19 },
+      { city: "Taipei", temp: 23 },
+      { city: "Jakarta", temp: 30 },
+      { city: "Kuala Lumpur", temp: 31 },
+      { city: "Santiago", temp: 16 },
+      { city: "Lima", temp: 18 },
+      { city: "Bogota", temp: 14 },
+      { city: "Auckland", temp: 20 },
+      { city: "Wellington", temp: 18 },
+      { city: "Melbourne", temp: 22 },
+      { city: "Vancouver", temp: 15 },
+      { city: "San Francisco", temp: 19 },
+      { city: "Dallas", temp: 25 },
+      { city: "Miami", temp: 27 },
+      { city: "Atlanta", temp: 23 }
+    ];
+
+    // A simple seeded random function using the sine method.
+    function seededRandom(seed) {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    }
+
+    // Returns a temperature value from a city based on the current time.
+    function getCityTemperature() {
+      const index = Date.now() % cities.length;
+      return cities[index].temp;
+    }
+
+    // Generates a random index for flashcards using a seed based on current time and a city's temperature.
+    function getRandomIndex() {
+      const seed = Date.now() + getCityTemperature();
+      const randomNumber = seededRandom(seed);
+      return Math.floor(randomNumber * flashcards.length);
+    }
+
+    // Initialize currentCard using our seeded random generator.
+    let currentCard = getRandomIndex();
+    let showingQuestion = true;
+
+    const flashcardElement = document.getElementById('flashcard');
+    const flipButton = document.getElementById('flipButton');
+    const nextButton = document.getElementById('nextButton');
+
+    function showCard() {
+      showingQuestion = true;
+      flashcardElement.textContent = flashcards[currentCard].question;
+      flipButton.style.display = 'inline-block';
+      nextButton.style.display = 'none';
+    }
+
+    flipButton.addEventListener('click', () => {
+      if (showingQuestion) {
+        flashcardElement.textContent = flashcards[currentCard].answer;
+        showingQuestion = false;
+        flipButton.style.display = 'none';
+        nextButton.style.display = 'inline-block';
+      }
+    });
+
+    nextButton.addEventListener('click', () => {
+      currentCard = getRandomIndex();
+      showCard();
+    });
+
+    // Start with a randomly selected flashcard.
+    showCard();
+  </script>
+</body>
+</html>
